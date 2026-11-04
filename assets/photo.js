@@ -34,6 +34,17 @@
     const b = await r.blob();
     handle(new File([b], 'IMG_4471.jpg', { type: 'image/jpeg' }));
   });
+  // photo.html?demo: simulates someone dropping the sample photo, for screen recordings
+  if (new URLSearchParams(location.search).has('demo')) {
+    try { history.replaceState(null, '', location.pathname); } catch {}
+    setTimeout(() => drop.classList.add('over'), 900);
+    setTimeout(async () => {
+      drop.classList.remove('over');
+      const b = await (await fetch('assets/sample.jpg')).blob();
+      handle(new File([b], 'IMG_4471.jpg', { type: 'image/jpeg' }));
+    }, 1900);
+  }
+
   $('another').addEventListener('click', () => {
     report.classList.remove('show');
     input.value = '';

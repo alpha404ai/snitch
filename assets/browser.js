@@ -249,28 +249,75 @@
     setTimeout(() => map.flyTo([lat, lon], 11, { duration: reduce ? 0 : 2.4 }), 300);
   }
 
+  // ---------------- demo mode ----------------
+  // browser.html?demo shows a made-up person. No IP lookup, no real hardware read.
+  const DEMO = new URLSearchParams(location.search).has('demo');
+  if (DEMO) { try { history.replaceState(null, '', location.pathname); } catch {} }
+
+  function demoEnv() {
+    return {
+      ip: { ip: '198.51.100.47', city: 'Brooklyn', region: 'New York', country: 'United States', cc: 'US', lat: 40.6782, lon: -73.9442, isp: 'Spectrum', asn: null, tz: 'America/New_York' },
+      tz: 'America/New_York',
+      ua: { os: 'macOS 15.1 · ARM-64', browser: 'Chrome 142', model: '' },
+      gpu: { name: 'Apple M3 Pro', raw: 'demo', vendor: 'demo' },
+      cores: 12, mem: 8,
+      screen: { w: 1512, h: 982, dpr: 2, depth: 30, iw: 1512, ih: 862, extended: true },
+      bat: { level: 23, charging: false, chargingTime: Infinity, dischargingTime: 41 * 60 },
+      conn: { effectiveType: '4g', downlink: 10, rtt: 50, saveData: false },
+      med: { cams: 1, mics: 1 },
+      touch: 0,
+      langs: ['en-US', 'es'],
+      ref: 'X (Twitter)',
+      vis: { n: 3, first: Date.now() - 2 * 86400000 - 3 * 3600000 },
+      dark: true, adblock: false,
+      fonts: { found: { 'Microsoft Office': ['Calibri', 'Cambria'], 'Coding fonts': ['Fira Code', 'Source Code Pro'] }, all: [] },
+      dnt: false,
+      fp: 'SN-7F3A-C21E',
+    };
+  }
+
+  async function realEnv() {
+    const pIP = getIP(), pUA = getUA(), pBat = getBattery(), pMed = getMedia(), pAd = adblock();
+    const dpr = window.devicePixelRatio || 1;
+    const env = {
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      gpu: getGPU(),
+      cores: navigator.hardwareConcurrency || null,
+      mem: navigator.deviceMemory || null,
+      screen: { w: screen.width, h: screen.height, dpr, depth: screen.colorDepth, iw: innerWidth, ih: innerHeight, extended: !!screen.isExtended },
+      conn: navigator.connection && navigator.connection.effectiveType ? navigator.connection : null,
+      touch: navigator.maxTouchPoints || 0,
+      langs: (navigator.languages || [navigator.language]).filter(Boolean),
+      ref: referrer(),
+      vis: visits(),
+      dark: matchMedia('(prefers-color-scheme: dark)').matches,
+      fonts: fonts(),
+      dnt: !!(navigator.globalPrivacyControl || navigator.doNotTrack === '1'),
+    };
+    env.pIP = pIP; env.pUA = pUA; env.pBat = pBat; env.pMed = pMed; env.pAd = pAd;
+    return env;
+  }
+
   // ---------------- run ----------------
   async function scan() {
     facts = [];
     ['g-where', 'g-device', 'g-you'].forEach((g) => ($(g).innerHTML = ''));
     term.innerHTML = '';
+    $('map').style.display = '';
     $('stamp').className = 'stamp';
     $('bar').style.width = '0';
     $('verdict').textContent = 'Scanning…';
-    $('casefile').textContent = `Case #${Math.floor(1000 + Math.random() * 9000)} · ${new Date().toLocaleString()}`;
+    $('casefile').textContent = `Case #${Math.floor(1000 + Math.random() * 9000)} · ${new Date().toLocaleString('en-US', DEMO ? { timeZone: 'America/New_York' } : {})}`;
+    const t0 = performance.now();
 
-    // kick off async stuff in parallel
-    const pIP = getIP(), pUA = getUA(), pBat = getBattery(), pMed = getMedia(), pAd = adblock();
-    const gpu = getGPU();
-    const fnt = fonts();
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const vis = visits();
-    const ref = referrer();
+    const env = DEMO ? demoEnv() : await realEnv();
+    const wait = (k, fake) => (DEMO ? sleep(250 + Math.random() * 300).then(() => fake) : env[k]);
 
     await say('<span class="dim">$</span> snitch --target you --no-permission', '', 350);
     await say('<span class="dim">› tracing your IP…</span>', '', 200);
 
-    const ip = await pIP;
+    const ip = await wait('pIP', env.ip);
+    const tz = env.tz;
     if (ip) {
       await say(`<span class="warn">✓</span> ${esc(ip.ip)} → <b>${esc(ip.city || '?')}, ${esc(ip.country || '?')}</b> ${flag(ip.cc)}`, '', 300);
       card('g-where', 'Your IP address', ip.ip, 'Every site gets this. No way around it except a VPN.', true);
@@ -284,60 +331,66 @@
       card('g-where', 'IP lookup', 'Blocked', 'Something on your side stopped the lookup. Most sites still see your IP on their own server.');
     }
     const now = new Date();
-    card('g-where', 'Your clock', `${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${tz}`, `UTC${-now.getTimezoneOffset() >= 0 ? '+' : ''}${-now.getTimezoneOffset() / 60}`);
+    const clock = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tz });
+    let off = '';
+    try { off = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' }).formatToParts(now).find((x) => x.type === 'timeZoneName').value.replace('GMT', 'UTC'); } catch {}
+    card('g-where', 'Your clock', `${clock} · ${tz}`, off);
 
     await say('<span class="dim">› fingerprinting hardware…</span>', '', 150);
-    const ua = await pUA;
+    const ua = await wait('pUA', env.ua);
     card('g-device', 'System', ua.os + (ua.model ? ` · ${ua.model}` : ''), ua.model ? 'Your phone model, sent in a request header.' : '');
     card('g-device', 'Browser', ua.browser, '');
-    if (gpu) {
-      card('g-device', 'Graphics card', gpu.name, 'Read straight from WebGL.', true);
-      await say(`<span class="warn">✓</span> GPU: ${esc(gpu.name)}`, '', 220);
+    if (env.gpu) {
+      card('g-device', 'Graphics card', env.gpu.name, 'Read straight from WebGL.', true);
+      await say(`<span class="warn">✓</span> GPU: ${esc(env.gpu.name)}`, '', 220);
     }
-    if (navigator.hardwareConcurrency) card('g-device', 'CPU cores', `${navigator.hardwareConcurrency} threads`, '');
-    if (navigator.deviceMemory) card('g-device', 'RAM', `${navigator.deviceMemory >= 8 ? '8+' : navigator.deviceMemory} GB`, 'Browsers round this and cap it at 8.');
-    const dpr = window.devicePixelRatio || 1;
-    card('g-device', 'Screen', `${screen.width}×${screen.height} @${+dpr.toFixed(2)}x`, `Window ${innerWidth}×${innerHeight} · ${screen.colorDepth}-bit color`);
-    if (screen.isExtended) card('g-device', 'Monitors', 'More than one', 'Your browser says you have a second screen.', true);
+    if (env.cores) card('g-device', 'CPU cores', `${env.cores} threads`, '');
+    if (env.mem) card('g-device', 'RAM', `${env.mem >= 8 ? '8+' : env.mem} GB`, 'Browsers round this and cap it at 8.');
+    const sc = env.screen;
+    card('g-device', 'Screen', `${sc.w}×${sc.h} @${+sc.dpr.toFixed(2)}x`, `Window ${sc.iw}×${sc.ih} · ${sc.depth}-bit color`);
+    if (sc.extended) card('g-device', 'Monitors', 'More than one', 'Your browser says you have a second screen.', true);
 
-    const bat = await pBat;
+    const bat = await wait('pBat', env.bat);
     if (bat) {
-      const mins = bat.charging ? bat.chargingTime : bat.dischargingTime;
-      const t = Number.isFinite(mins) && mins > 0 ? ` · ~${Math.round(mins / 60)} min ${bat.charging ? 'to full' : 'left'}` : '';
+      const secs = bat.charging ? bat.chargingTime : bat.dischargingTime;
+      const t = Number.isFinite(secs) && secs > 0 ? ` · ~${Math.round(secs / 60)} min ${bat.charging ? 'to full' : 'left'}` : '';
       card('g-device', 'Battery', `${bat.level}% ${bat.charging ? '⚡ charging' : 'on battery'}`, `Live, updates while you sit here${t}.`, bat.level <= 25 && !bat.charging);
       await say(`<span class="warn">✓</span> battery ${bat.level}%${bat.charging ? ', plugged in' : ''}`, '', 200);
     }
-    const conn = navigator.connection;
-    if (conn && conn.effectiveType) card('g-device', 'Connection', `${conn.effectiveType.toUpperCase()}${conn.downlink ? ` · ~${conn.downlink} Mbps` : ''}${conn.rtt ? ` · ${conn.rtt} ms` : ''}`, conn.saveData ? 'Data saver is on.' : '');
-    const med = await pMed;
+    const conn = env.conn;
+    if (conn) card('g-device', 'Connection', `${conn.effectiveType.toUpperCase()}${conn.downlink ? ` · ~${conn.downlink} Mbps` : ''}${conn.rtt ? ` · ${conn.rtt} ms` : ''}`, conn.saveData ? 'Data saver is on.' : '');
+    const med = await wait('pMed', env.med);
     if (med && (med.cams || med.mics)) card('g-device', 'Camera & mic', `${med.cams ? 'Camera ✓' : 'No camera'} · ${med.mics ? 'Mic ✓' : 'No mic'}`, 'Seen without asking. Using them still needs your OK.');
-    if (navigator.maxTouchPoints > 0) card('g-device', 'Touchscreen', `${navigator.maxTouchPoints}-point touch`, '');
+    if (env.touch > 0) card('g-device', 'Touchscreen', `${env.touch}-point touch`, '');
 
     await say('<span class="dim">› profiling you…</span>', '', 150);
-    const langs = (navigator.languages || [navigator.language]).filter(Boolean);
     const dn = (() => { try { return new Intl.DisplayNames(['en'], { type: 'language' }); } catch { return null; } })();
-    const langNames = [...new Set(langs.map((l) => (dn ? dn.of(l.split('-')[0]) : l)))];
+    const langNames = [...new Set(env.langs.map((l) => (dn ? dn.of(l.split('-')[0]) : l)))];
     card('g-you', 'You speak', langNames.join(', '), 'From your browser language settings.', langNames.length > 1);
-    if (ref) card('g-you', 'You came from', ref, 'Sites see the page that sent you here.', true);
+    if (env.ref) card('g-you', 'You came from', env.ref, 'Sites see the page that sent you here.', true);
+    const vis = env.vis;
     if (vis) card('g-you', 'Visits', vis.n === 1 ? 'First time here' : `${ordinal(vis.n)} visit`, vis.n === 1 ? 'Come back and this page will know.' : `First seen ${ago(Date.now() - vis.first)}.`, vis.n > 1);
-    if (matchMedia('(prefers-color-scheme: dark)').matches) card('g-you', 'Dark mode', 'On', 'Sites can read your theme setting.');
-    const blocked = await pAd;
+    if (env.dark) card('g-you', 'Dark mode', 'On', 'Sites can read your theme setting.');
+    const blocked = await wait('pAd', env.adblock);
     card('g-you', 'Ad blocker', blocked ? 'Detected' : 'None found', blocked ? 'Good for you. Sites can still tell it\'s there.' : 'You see every ad on the internet.', false);
-    for (const [g, list] of Object.entries(fnt.found)) {
+    for (const [g, list] of Object.entries(env.fonts.found)) {
       const label = { 'Microsoft Office': 'Microsoft Office installed', 'Adobe apps': 'Adobe apps installed', 'Coding fonts': 'You probably write code', 'Designer fonts': 'Pro design fonts installed' }[g];
       card('g-you', label, list.slice(0, 3).join(', '), 'Detected from fonts on your system.', g === 'Coding fonts');
     }
-    if (navigator.globalPrivacyControl || navigator.doNotTrack === '1') card('g-you', '"Do not track"', 'On', 'Most sites ignore it. Ironically it makes you easier to fingerprint.');
+    if (env.dnt) card('g-you', '"Do not track"', 'On', 'Most sites ignore it. Ironically it makes you easier to fingerprint.');
 
     await say('<span class="dim">› building fingerprint…</span>', '', 120);
-    const fpSrc = [canvasPrint(), gpu?.raw, gpu?.vendor, screen.width, screen.height, screen.colorDepth, dpr, tz, langs.join(','), navigator.hardwareConcurrency, navigator.deviceMemory, navigator.platform, fnt.all.join(','), navigator.maxTouchPoints].join('|');
-    const h = (await sha(fpSrc)).toUpperCase();
-    const id = `SN-${h.slice(0, 4)}-${h.slice(4, 8)}`;
+    let id = env.fp;
+    if (!id) {
+      const fpSrc = [canvasPrint(), env.gpu?.raw, env.gpu?.vendor, sc.w, sc.h, sc.depth, sc.dpr, tz, env.langs.join(','), env.cores, env.mem, navigator.platform, env.fonts.all.join(','), env.touch].join('|');
+      const h = (await sha(fpSrc)).toUpperCase();
+      id = `SN-${h.slice(0, 4)}-${h.slice(4, 8)}`;
+    }
     $('fp').textContent = id;
     facts.push({ k: 'Fingerprint', v: id });
     $('score').textContent = facts.length;
     await say(`<span class="bad">●</span> fingerprint locked: <b>${id}</b>`, '', 200);
-    await say(`<span class="warn">done.</span> your browser snitched <b>${facts.length}</b> things in ${(performance.now() / 1000).toFixed(1)}s. you clicked nothing.`, '', 0);
+    await say(`<span class="warn">done.</span> your browser snitched <b>${facts.length}</b> things in ${((performance.now() - t0) / 1000).toFixed(1)}s. you clicked nothing.`, '', 0);
 
     const n = facts.length;
     $('bar').style.width = Math.min(100, n * 4) + '%';
