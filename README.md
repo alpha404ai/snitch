@@ -37,7 +37,7 @@ Open the page and don't click anything. It lists what any website can read the m
 - Photos are read locally with [exifr](https://github.com/MikeKovarik/exifr). They never get uploaded.
 - Photo Snitch sends only the coordinates (not the photo) to OpenStreetMap Nominatim to turn them into an address.
 - Browser Snitch makes one request to [ipwho.is](https://ipwho.is) to turn your IP into a city. Nothing else leaves the page.
-- Map tiles come from CARTO / OpenStreetMap.
+- Satellite map tiles come from Esri, with OpenStreetMap as a fallback.
 - No analytics, no cookies. The only thing stored is a visit counter in your own browser's localStorage.
 
 ## Run it yourself

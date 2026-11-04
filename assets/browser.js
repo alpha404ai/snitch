@@ -220,10 +220,27 @@
     await sleep(reduce ? 0 : pause);
   }
 
+
+  // Satellite base + street labels (Esri, no key). Falls back to OpenStreetMap if Esri fails.
+  function addBaseLayers(map) {
+    const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, maxNativeZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
+    }).addTo(map);
+    const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
+    const roads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.6 }).addTo(map);
+    let fails = 0, switched = false;
+    sat.on('tileerror', () => {
+      if (switched || ++fails < 4) return;
+      switched = true;
+      [sat, labels, roads].forEach((l) => map.removeLayer(l));
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    });
+  }
+
   function showMap(lat, lon) {
     if (!map) {
       map = L.map('map', { zoomControl: true, scrollWheelZoom: false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+      addBaseLayers(map);
     }
     map.eachLayer((l) => { if (!(l instanceof L.TileLayer)) map.removeLayer(l); });
     map.setView([lat, lon], 2);
