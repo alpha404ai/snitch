@@ -55,9 +55,11 @@
       let r = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
       let v = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
       const raw = r;
-      const m = /ANGLE \(([^,]+),\s*(?:ANGLE Metal Renderer:\s*)?([^,(]+)/.exec(r);
-      if (m) r = m[2].trim();
-      r = r.replace(/\s*\(0x[0-9a-f]+\)/i, '').replace(/Direct3D.*$/i, '').trim();
+      let clean = String(r).replace(/\((R|TM)\)/gi, '');
+      const m = /ANGLE \(([^,]+),\s*(?:ANGLE Metal Renderer:\s*)?([^,]+?)(?:\s+Direct3D|\s+\(0x|\s*,|\s*\)|$)/.exec(clean);
+      if (m) clean = m[2];
+      clean = clean.replace(/\s*\(0x[0-9a-f]+\)/i, '').replace(/\s+Direct3D.*$/i, '').replace(/\s{2,}/g, ' ').trim();
+      r = clean || raw;
       return { name: r, vendor: v, raw };
     } catch { return null; }
   }
@@ -351,7 +353,8 @@
     if (sc.extended) card('g-device', 'Monitors', 'More than one', 'Your browser says you have a second screen.', true);
 
     const bat = await wait('pBat', env.bat);
-    if (bat) {
+    const noBattery = bat && bat.charging && (bat.level === 0 || (bat.level === 100 && bat.chargingTime === 0));
+    if (bat && !noBattery) {
       const secs = bat.charging ? bat.chargingTime : bat.dischargingTime;
       const t = Number.isFinite(secs) && secs > 0 ? ` · ~${Math.round(secs / 60)} min ${bat.charging ? 'to full' : 'left'}` : '';
       card('g-device', 'Battery', `${bat.level}% ${bat.charging ? '⚡ charging' : 'on battery'}`, `Live, updates while you sit here${t}.`, bat.level <= 25 && !bat.charging);
