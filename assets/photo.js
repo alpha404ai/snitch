@@ -34,15 +34,40 @@
     const b = await r.blob();
     handle(new File([b], 'IMG_4471.jpg', { type: 'image/jpeg' }));
   });
-  // photo.html?demo: simulates someone dropping the sample photo, for screen recordings
-  if (new URLSearchParams(location.search).has('demo')) {
+  // photo.html?demo        -> any photo you drop shows a made-up Venice trip instead of its real metadata
+  // photo.html?demo=sample -> also auto-drops the bundled sample photo
+  const demoParam = new URLSearchParams(location.search).get('demo');
+  const DEMO = demoParam !== null;
+  if (DEMO) {
     try { history.replaceState(null, '', location.pathname); } catch {}
-    setTimeout(() => drop.classList.add('over'), 900);
-    setTimeout(async () => {
-      drop.classList.remove('over');
-      const b = await (await fetch('assets/sample.jpg')).blob();
-      handle(new File([b], 'IMG_4471.jpg', { type: 'image/jpeg' }));
-    }, 1900);
+    if (demoParam === 'sample') {
+      setTimeout(() => drop.classList.add('over'), 900);
+      setTimeout(async () => {
+        drop.classList.remove('over');
+        const b = await (await fetch('assets/sample.jpg')).blob();
+        handle(new File([b], 'IMG_4471.jpg', { type: 'image/jpeg' }));
+      }, 1900);
+    }
+  }
+
+  // Fake profile: Rialto Bridge, Venice. Used instead of reading the real file in demo mode.
+  function demoVenice() {
+    const d = new Date(2026, 9, 18, 18, 42, 13); // 18 Oct 2026, 18:42:13 local camera time
+    return {
+      Make: 'Apple', Model: 'iPhone 16 Pro', Software: '18.1', HostComputer: 'iPhone 16 Pro',
+      LensMake: 'Apple', LensModel: 'iPhone 16 Pro back triple camera 6.765mm f/1.78',
+      DateTimeOriginal: d, CreateDate: d, ModifyDate: d, OffsetTimeOriginal: '+02:00', OffsetTime: '+02:00',
+      latitude: 45.438056, longitude: 12.335833, GPSLatitudeRef: 'N', GPSLongitudeRef: 'E',
+      GPSAltitude: 3.2, GPSAltitudeRef: 0, GPSImgDirection: 212, GPSImgDirectionRef: 'T', GPSHPositioningError: 4.7,
+      GPSSpeed: 0, GPSSpeedRef: 'K', GPSDestBearing: 212,
+      ExposureTime: 1 / 120, FNumber: 1.78, ISO: 64, FocalLength: 6.765, FocalLengthIn35mmFormat: 24,
+      ExposureProgram: 'Normal program', MeteringMode: 'Pattern', Flash: 'Flash did not fire, compulsory flash mode',
+      WhiteBalance: 'Auto', SceneCaptureType: 'Standard', SensingMethod: 'One-chip color area sensor',
+      BrightnessValue: 7.41, ExposureCompensation: 0, SubjectArea: [2849, 2135, 3136, 1767],
+      ExifImageWidth: 5712, ExifImageHeight: 4284, ColorSpace: 'Uncalibrated', Orientation: 'Horizontal (normal)',
+      XResolution: 72, YResolution: 72, ResolutionUnit: 'inches', YCbCrPositioning: 'Centered',
+      CompositeImage: 'Composite Image Captured While Shooting', ExifVersion: '0232', FlashpixVersion: '0100',
+    };
   }
 
   $('another').addEventListener('click', () => {
@@ -104,7 +129,8 @@
     setTimeout(() => report.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
 
     let data = null;
-    try {
+    if (DEMO) { await new Promise((r) => setTimeout(r, 350)); data = demoVenice(); }
+    else try {
       data = await exifr.parse(file, {
         tiff: true, exif: true, gps: true, xmp: true, iptc: true, jfif: true, ihdr: true,
         icc: false, interop: false, makerNote: false, userComment: true,
