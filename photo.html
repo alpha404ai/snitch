@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Photo Snitch · your photo told on you</title>
+<meta name="description" content="Drop any photo. See the exact spot it was taken, the phone, the date and time. Then wipe it clean. Runs in your browser, nothing is uploaded.">
+<meta property="og:title" content="Photo Snitch: your photo told on you">
+<meta property="og:description" content="Drop a photo. See the exact spot it was taken on a map. Wipe it in one click.">
+<meta property="og:image" content="https://alpha404ai.github.io/snitch/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alpha404ai.github.io/snitch/og.png">
+<meta name="theme-color" content="#0c0c0b">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="tape"></div>
+<div class="wrap">
+  <nav class="nav">
+    <a class="logo" href="./"><span class="rat">🐀</span>SNITCH</a>
+    <div class="nav-links">
+      <a href="photo.html" aria-current="page">Photo</a>
+      <a href="browser.html">Browser</a>
+      <a href="https://github.com/alpha404ai/snitch" id="gh-link">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Case file 01 · Photo Snitch</p>
+    <h1>Your photo<br><span class="hl">told on you</span></h1>
+    <p class="sub">Drop any photo. If it still has its metadata, you'll see <b>where it was taken on a map</b>, the phone, the exact minute. Then wipe it in one click.</p>
+  </header>
+
+  <label class="drop" id="drop">
+    <input type="file" id="file" accept="image/*,.heic,.heif,.dng,.tif,.tiff">
+    <div class="big">Drop a photo here</div>
+    <p>or tap to pick one. JPG, PNG, HEIC, WebP, TIFF.</p>
+    <span class="row" style="justify-content:center">
+      <span class="btn">Pick photo</span>
+      <button class="btn ghost" type="button" id="sample">Try a sample</button>
+    </span>
+    <div class="fine">The photo never leaves your device. It's read right here in your browser.</div>
+  </label>
+
+  <section class="report" id="report" aria-live="polite">
+    <div class="report-head">
+      <div class="thumb" id="thumb"></div>
+      <div>
+        <div class="case" id="casefile">Case file</div>
+        <div class="score"><span class="n" id="score">0</span><span class="of">/100 snitch score</span></div>
+        <div class="verdict" id="verdict">Scanning…</div>
+        <div class="bar"><i id="bar"></i></div>
+      </div>
+      <div class="stamp" id="stamp">Snitched</div>
+    </div>
+
+    <div id="geo-block" class="hidden">
+      <h3 class="section-title">📍 Where it was taken <small id="geo-acc"></small></h3>
+      <div class="map" id="map"></div>
+    </div>
+
+    <h3 class="section-title">Evidence <small id="ev-count"></small></h3>
+    <div class="grid" id="grid"></div>
+
+    <details class="raw" id="raw">
+      <summary>Every hidden tag in this file</summary>
+      <table class="raw-table" id="raw-table"></table>
+    </details>
+
+    <div class="cleanbox">
+      <div>
+        <h3>Wipe it clean</h3>
+        <p id="clean-msg">Makes a fresh copy with zero metadata: no GPS, no phone, no date. Same picture.</p>
+      </div>
+      <div class="row">
+        <button class="btn red" id="clean">Wipe &amp; download</button>
+        <button class="btn ghost" id="another">Check another</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Nothing is uploaded. The map tiles come from CARTO and the address lookup sends only the coordinates (never the photo) to OpenStreetMap.<br>
+    Open source, MIT. <a href="./">Snitch</a> · <a href="browser.html">Browser Snitch</a>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+<script src="vendor/exifr.js"></script>
+<script src="vendor/leaflet.js"></script>
+<script src="assets/photo.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Browser Snitch · what every site already knows</title>
+<meta name="description" content="Open this page and don't click anything. It shows your city, your GPU, your battery and the fingerprint sites use to follow you, even in incognito.">
+<meta property="og:title" content="Browser Snitch: what every site already knows about you">
+<meta property="og:description" content="Don't click anything. Just watch what your browser gives away.">
+<meta property="og:image" content="https://alpha404ai.github.io/snitch/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alpha404ai.github.io/snitch/og.png">
+<meta name="theme-color" content="#0c0c0b">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="tape"></div>
+<div class="wrap">
+  <nav class="nav">
+    <a class="logo" href="./"><span class="rat">🐀</span>SNITCH</a>
+    <div class="nav-links">
+      <a href="photo.html">Photo</a>
+      <a href="browser.html" aria-current="page">Browser</a>
+      <a href="https://github.com/alpha404ai/snitch" id="gh-link">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Case file 02 · Browser Snitch</p>
+    <h1>Don't click<br><span class="hl">anything.</span></h1>
+    <p class="sub">You opened a page. That's all it took. Everything below is what <b>any website</b> can see the second you land on it. No permission popups.</p>
+  </header>
+
+  <div class="term" id="term" aria-live="polite"></div>
+
+  <section class="report show">
+    <div class="report-head">
+      <div class="thumb" style="aspect-ratio:auto;min-height:150px;background:var(--panel-2)">
+        <div style="font:400 64px/1 var(--head)">👁</div>
+      </div>
+      <div>
+        <div class="case" id="casefile">Case file</div>
+        <div class="score"><span class="n" id="score">0</span><span class="of">things your browser just told me</span></div>
+        <div class="verdict" id="verdict">Scanning…</div>
+        <div class="bar"><i id="bar"></i></div>
+      </div>
+      <div class="stamp" id="stamp">Snitched</div>
+    </div>
+
+    <h3 class="section-title">📍 Where you are <small>from your IP, no GPS asked</small></h3>
+    <div class="map" id="map"></div>
+    <div class="grid" id="g-where"></div>
+
+    <h3 class="section-title">💻 Your machine</h3>
+    <div class="grid" id="g-device"></div>
+
+    <h3 class="section-title">🧠 Guesses about you</h3>
+    <div class="grid" id="g-you"></div>
+
+    <h3 class="section-title"><span class="dot"></span>Watching you right now <small>live, this tab only</small></h3>
+    <div class="live" id="g-live"></div>
+
+    <h3 class="section-title">🔑 Your fingerprint</h3>
+    <div class="fp">
+      <div>
+        <div class="id" id="fp">SN-····-····</div>
+        <p>Built from your graphics card, screen, fonts, timezone and how your browser draws pixels. No cookies needed. Open this page in incognito: on most browsers you'll get the same ID.</p>
+      </div>
+      <div class="row">
+        <button class="btn" id="share">Copy my results</button>
+        <button class="btn ghost" id="rescan">Scan again</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    This page stores nothing and sends nothing about you anywhere, except one request to <a href="https://ipwho.is" rel="noopener">ipwho.is</a> to turn your IP into a city (the same thing every analytics script does). Map tiles: CARTO / OpenStreetMap.<br>
+    Open source, MIT. <a href="./">Snitch</a> · <a href="photo.html">Photo Snitch</a>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+<script src="vendor/leaflet.js"></script>
+<script src="assets/browser.js"></script>
+</body>
+</html>

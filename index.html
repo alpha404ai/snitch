@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snitch · your phone is a snitch</title>
+<meta name="description" content="Find out what your photos and your browser say about you. Exact GPS from a photo, your city from one page load. Runs 100% in your browser.">
+<meta property="og:title" content="Snitch: your phone is a snitch">
+<meta property="og:description" content="Drop a photo, see where you were standing. Open one page, see everything your browser leaks. Nothing uploaded.">
+<meta property="og:image" content="https://alpha404ai.github.io/snitch/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alpha404ai.github.io/snitch/og.png">
+<meta name="theme-color" content="#0c0c0b">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="tape-text"><span>Evidence · do not cross · your phone is a snitch · evidence · do not cross · your phone is a snitch · evidence · do not cross · your phone is a snitch ·</span></div>
+<div class="wrap">
+  <nav class="nav">
+    <a class="logo" href="./"><span class="rat">🐀</span>SNITCH</a>
+    <div class="nav-links">
+      <a href="photo.html">Photo</a>
+      <a href="browser.html">Browser</a>
+      <a href="https://github.com/alpha404ai/snitch" id="gh-link">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Open case · 2 suspects</p>
+    <h1>Your phone<br>is a <span class="hl">snitch.</span></h1>
+    <p class="sub">Your photos carry the exact spot they were taken. Your browser hands over your city, your hardware and a fingerprint the second a page loads. <b>Find out what yours told on you.</b></p>
+  </header>
+
+  <div class="cards">
+    <a class="card" href="photo.html">
+      <div class="num">SUSPECT 01</div>
+      <h2>Photo Snitch</h2>
+      <p>Drop any photo. See where you were standing.</p>
+      <ul>
+        <li>GPS pin on a map, down to meters</li>
+        <li>Nearest street address</li>
+        <li>Phone model, iOS version, selfie cam</li>
+        <li>Date and time to the second</li>
+        <li>One click to wipe it all</li>
+      </ul>
+      <span class="go">Check a photo →</span>
+    </a>
+    <a class="card" href="browser.html">
+      <div class="num">SUSPECT 02</div>
+      <h2>Browser Snitch</h2>
+      <p>Open it. Don't click anything. Watch.</p>
+      <ul>
+        <li>Your IP, city and internet provider</li>
+        <li>GPU, CPU, RAM, screen, battery %</li>
+        <li>Where you came from, VPN check</li>
+        <li>Live tracking of your mouse and tabs</li>
+        <li>The fingerprint that survives incognito</li>
+      </ul>
+      <span class="go">Scan my browser →</span>
+    </a>
+  </div>
+
+  <p class="fine">No sign-up, no install, no server. Everything runs in your browser and nothing gets stored. Open source.</p>
+
+  <footer>
+    Made to show how much leaks by default. Use it on your own stuff.<br>
+    Open source, MIT. <a href="photo.html">Photo Snitch</a> · <a href="browser.html">Browser Snitch</a>
+  </footer>
+</div>
+<script>
+(() => {
+  const h = location.hostname;
+  if (h.endsWith('github.io')) {
+    const user = h.split('.')[0];
+    const repo = location.pathname.split('/').filter(Boolean)[0] || 'snitch';
+    document.getElementById('gh-link').href = `https://github.com/${user}/${repo}`;
+  }
+})();
+</script>
+</body>
+</html>
